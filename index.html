@@ -9,6 +9,18 @@
 <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
 <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png">
 <link rel="apple-touch-icon" href="/apple-touch-icon.png">
+
+<!-- ===== Analytics (Google Analytics 4) =====
+     Create a free GA4 property at analytics.google.com, then replace BOTH
+     instances of G-XXXXXXXXXX below with your Measurement ID. Outbound buy-click
+     and form-submit events are tracked automatically in the script at the bottom. -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-XXXXXXXXXX"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+  gtag('config', 'G-XXXXXXXXXX');
+</script>
 <meta name="description" content="Pre-Approved is the credit union playbook for closing the gap between approved and funded auto loans. Book by Christian Daniel Anghelcev. Buy the book or book Christian to speak.">
 
 <!-- ===== SEO / crawl directives =====
@@ -501,21 +513,21 @@
         <h3>Trade paperback</h3>
         <p>6&times;9, the edition to mark up and pass around the lending team.</p>
         <div class="edition__price">$14.99</div>
-        <a class="btn" href="https://www.amazon.com/dp/B0H57MMK35" rel="noopener">Buy on Amazon</a>
+        <a class="btn" href="https://www.amazon.com/dp/B0H57MMK35" target="_blank" rel="noopener noreferrer" data-buy="Paperback">Buy on Amazon</a>
       </div>
       <div class="edition reveal edition--feature">
         <span class="edition__tag">Hardcover</span>
         <h3>Hardcover</h3>
         <p>Case laminate. The copy to hand a CEO or leave on the boardroom table.</p>
         <div class="edition__price">$19.99</div>
-        <a class="btn" href="https://www.amazon.com/dp/B0H57TG9SJ/" rel="noopener">Buy on Amazon</a>
+        <a class="btn" href="https://www.amazon.com/dp/B0H57TG9SJ/" target="_blank" rel="noopener noreferrer" data-buy="Hardcover">Buy on Amazon</a>
       </div>
       <div class="edition reveal">
         <span class="edition__tag">Kindle</span>
         <h3>Kindle eBook</h3>
         <p>Read it on a flight before your next lending meeting.</p>
         <div class="edition__price">$7.99</div>
-        <a class="btn" href="https://www.amazon.com/dp/B0H57Q65SX" rel="noopener">Buy on Kindle</a>
+        <a class="btn" href="https://www.amazon.com/dp/B0H57Q65SX" target="_blank" rel="noopener noreferrer" data-buy="Kindle">Buy on Kindle</a>
       </div>
     </div>
   </div>
@@ -693,6 +705,13 @@
   // Helper: is the form wired to a real endpoint yet?
   function configured(form){return /^https?:\/\//.test(form.getAttribute('action')||'');}
 
+  // Analytics: fire GA4 events if gtag is present (no-op until you add your Measurement ID)
+  function track(name,params){if(window.gtag){try{gtag('event',name,params||{});}catch(e){}}}
+  // Track which edition buyers click through to Amazon
+  document.querySelectorAll('[data-buy]').forEach(function(a){
+    a.addEventListener('click',function(){track('buy_click',{edition:a.getAttribute('data-buy')});});
+  });
+
   // Contact form -> posts natively to hidden iframe (works with GHL webhook or Google Apps Script)
   var cForm=document.getElementById('contactForm'),msg=document.getElementById('formMsg'),
       cfIframe=document.getElementById('cf_iframe'),cfSent=false;
@@ -700,6 +719,7 @@
     if(!configured(cForm)){e.preventDefault();msg.style.display='block';msg.style.color='#b4451f';
       msg.textContent='Form not connected yet. Paste your GoHighLevel inbound webhook URL into the form\u2019s action.';return;}
     cfSent=true;msg.style.display='block';msg.style.color='#566372';msg.textContent='Sending\u2026';
+    track('generate_lead',{form:'contact',inquiry:(cForm.inquiry_type?cForm.inquiry_type.value:'')});
   });
   cfIframe.addEventListener('load',function(){
     if(!cfSent)return; // ignore the iframe's initial blank load
@@ -713,6 +733,7 @@
     if(!configured(chForm)){e.preventDefault();
       if(chNote){chNote.style.color='#3a2f12';chNote.textContent='Not connected yet \u2014 add your GoHighLevel webhook URL to activate.';}return;}
     chSent=true;
+    track('generate_lead',{form:'chapter'});
   });
   chIframe.addEventListener('load',function(){
     if(!chSent)return;chForm.reset();
