@@ -575,11 +575,15 @@
         <h2>Read the first chapter free</h2>
         <p>Get &ldquo;The Leak You Can&rsquo;t See on a Spreadsheet&rdquo; in your inbox, plus occasional notes on credit union auto retention.</p>
       </div>
-      <form id="chapterForm" class="capture-form">
+      <form id="chapterForm" class="capture-form" action="https://services.leadconnectorhq.com/hooks/kH0WMTEQTfStYC09zcyp/webhook-trigger/6111c13f-3a8f-4ae7-a056-3e299e572fe9" method="POST" target="ch_iframe">
+        <input type="hidden" name="form_name" value="Free chapter request">
+        <input type="hidden" name="subject" value="Free chapter request from the Pre-Approved website">
+        <input type="text" name="company_website" tabindex="-1" autocomplete="off" aria-hidden="true" style="position:absolute;left:-9999px;width:1px;height:1px;opacity:0">
         <input type="email" name="email" placeholder="you@yourcreditunion.com" required aria-label="Email address">
         <button class="btn" type="submit">Send me the chapter</button>
         <small>No spam. Unsubscribe anytime.</small>
       </form>
+      <iframe name="ch_iframe" id="ch_iframe" title="form submission target" style="display:none" aria-hidden="true"></iframe>
     </div>
   </div>
 </section>
@@ -607,10 +611,11 @@
       <h2>Get in touch</h2>
       <p class="lede">Speaking inquiries, bulk and author copies, or a conversation about closing the leak at your credit union.</p>
     </div>
-    <form class="form reveal" id="contactForm">
-      <input type="hidden" name="access_key" value="YOUR_WEB3FORMS_ACCESS_KEY">
-      <input type="hidden" name="subject" value="Pre-Approved website inquiry">
-      <input type="checkbox" name="botcheck" style="display:none" tabindex="-1" autocomplete="off">
+    <form class="form reveal" id="contactForm" action="https://services.leadconnectorhq.com/hooks/kH0WMTEQTfStYC09zcyp/webhook-trigger/6111c13f-3a8f-4ae7-a056-3e299e572fe9" method="POST" target="cf_iframe">
+      <input type="hidden" name="form_name" value="Pre-Approved website inquiry">
+      <input type="hidden" name="subject" value="New inquiry from the Pre-Approved website">
+      <!-- honeypot: bots fill this, humans never see it -->
+      <input type="text" name="company_website" tabindex="-1" autocomplete="off" aria-hidden="true" style="position:absolute;left:-9999px;width:1px;height:1px;opacity:0">
       <div class="form__row">
         <div><label for="cf-name">Name</label><input id="cf-name" name="name" required></div>
         <div><label for="cf-org">Credit union / organization</label><input id="cf-org" name="organization"></div>
@@ -631,6 +636,7 @@
       <button class="btn" type="submit">Send message</button>
       <p class="form__msg" id="formMsg"></p>
     </form>
+    <iframe name="cf_iframe" id="cf_iframe" title="form submission target" style="display:none" aria-hidden="true"></iframe>
   </div>
 </section>
 
@@ -679,23 +685,35 @@
     a.addEventListener('click',function(){var s=document.getElementById('cf-type');if(s)s.value=a.getAttribute('data-inquiry')});
   });
 
-  // Contact form (Web3Forms). Replace access_key above to activate.
-  var cForm=document.getElementById('contactForm'),msg=document.getElementById('formMsg');
+  // Helper: is the form wired to a real endpoint yet?
+  function configured(form){return /^https?:\/\//.test(form.getAttribute('action')||'');}
+
+  // Contact form -> posts natively to hidden iframe (works with GHL webhook or Google Apps Script)
+  var cForm=document.getElementById('contactForm'),msg=document.getElementById('formMsg'),
+      cfIframe=document.getElementById('cf_iframe'),cfSent=false;
   cForm.addEventListener('submit',function(e){
-    e.preventDefault();
-    var key=cForm.access_key.value;
-    if(key.indexOf('YOUR_')===0){msg.style.display='block';msg.style.color='#b4451f';msg.textContent='Form not yet connected. Add your Web3Forms access key to activate.';return;}
-    msg.style.display='block';msg.style.color='#566372';msg.textContent='Sending\u2026';
-    fetch('https://api.web3forms.com/submit',{method:'POST',headers:{'Content-Type':'application/json',Accept:'application/json'},body:JSON.stringify(Object.fromEntries(new FormData(cForm)))})
-      .then(function(r){return r.json()}).then(function(d){
-        if(d.success){cForm.reset();msg.style.color='#1d6b3a';msg.textContent='Thanks \u2014 your message is on its way.'}
-        else{msg.style.color='#b4451f';msg.textContent='Something went wrong. Please email instead.'}
-      }).catch(function(){msg.style.color='#b4451f';msg.textContent='Something went wrong. Please email instead.'});
+    if(!configured(cForm)){e.preventDefault();msg.style.display='block';msg.style.color='#b4451f';
+      msg.textContent='Form not connected yet. Paste your GoHighLevel inbound webhook URL into the form\u2019s action.';return;}
+    cfSent=true;msg.style.display='block';msg.style.color='#566372';msg.textContent='Sending\u2026';
+  });
+  cfIframe.addEventListener('load',function(){
+    if(!cfSent)return; // ignore the iframe's initial blank load
+    cForm.reset();msg.style.color='#1d6b3a';msg.textContent='Thanks \u2014 your message is on its way.';cfSent=false;
   });
 
-  // Chapter capture (placeholder handler)
-  document.getElementById('chapterForm').addEventListener('submit',function(e){
-    e.preventDefault();var i=this.querySelector('input');alert('Connect this to your email tool (GoHighLevel or Web3Forms) to deliver the first chapter to: '+i.value);i.value='';
+  // Free-chapter capture -> same mechanism
+  var chForm=document.getElementById('chapterForm'),chIframe=document.getElementById('ch_iframe'),
+      chNote=chForm.querySelector('small'),chSent=false,chNoteText=chNote?chNote.textContent:'';
+  chForm.addEventListener('submit',function(e){
+    if(!configured(chForm)){e.preventDefault();
+      if(chNote){chNote.style.color='#3a2f12';chNote.textContent='Not connected yet \u2014 add your GoHighLevel webhook URL to activate.';}return;}
+    chSent=true;
+  });
+  chIframe.addEventListener('load',function(){
+    if(!chSent)return;chForm.reset();
+    if(chNote){chNote.style.color='#1d6b3a';chNote.textContent='Thanks \u2014 check your inbox shortly.';
+      setTimeout(function(){chNote.style.color='';chNote.textContent=chNoteText;},6000);}
+    chSent=false;
   });
 </script>
 </body>
