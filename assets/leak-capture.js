@@ -86,16 +86,16 @@
   }
 
   var MARKUP = [
-    '<h3 style="margin:1.6rem 0 .4rem">Get this number from your own call report</h3>',
+    '<h3 style="margin:0 0 .4rem">Get this number from your own call report</h3>',
     '<p class="calc__note">The figures above are your estimates. Ask for the audit and you get the same arithmetic built from your NCUA 5300 filing \u2014 your auto balances against your membership and your peer group. It is free, and it does not require a meeting.</p>',
-    '<form class="capture-form" data-leak-form novalidate>',
+    '<form class="form" data-leak-form novalidate>',
     '<div class="form__row">',
-    '<label>Name<input type="text" name="name" autocomplete="name" required></label>',
-    '<label>Credit union<input type="text" name="organization" autocomplete="organization" required></label>',
+    '<div><label for="la_name">Name</label><input id="la_name" type="text" name="name" autocomplete="name" required></div>',
+    '<div><label for="la_org">Credit union</label><input id="la_org" type="text" name="organization" autocomplete="organization" required></div>',
     '</div>',
     '<div class="form__row">',
-    '<label>Work email<input type="email" name="email" autocomplete="email" required></label>',
-    '<label>NCUA charter number (optional)<input type="text" name="charter_number" inputmode="numeric" autocomplete="off"></label>',
+    '<div><label for="la_email">Work email</label><input id="la_email" type="email" name="email" autocomplete="email" required></div>',
+    '<div><label for="la_charter">NCUA charter number (optional)</label><input id="la_charter" type="text" name="charter_number" inputmode="numeric" autocomplete="off"></div>',
     '</div>',
     '<div style="position:absolute;left:-9999px" aria-hidden="true"><input type="text" name="company_website" tabindex="-1" autocomplete="off"></div>',
     '<button class="btn" type="submit">Send me the free audit<span class="btn__arrow">\u2192</span></button>',
